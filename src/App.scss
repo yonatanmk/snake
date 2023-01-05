@@ -1,0 +1,21 @@
+.App {
+  text-align: center;
+
+  .grid {
+    display: grid;
+    border: 1px solid black;
+    // gap: 1px;
+    grid-template-columns: repeat(17, 1fr);
+    width: 40%;
+    margin: auto;
+
+    .cell {
+      padding-bottom: 100%;
+      border: 1px solid black;
+
+      &--head {
+        background-color: green;
+      }
+    }
+  }
+}
