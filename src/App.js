@@ -58,13 +58,15 @@ function App() {
       <input
         type="number"
         value={timeInterval.current}
+        max="500"
         onChange={(e) => {
-          timeInterval.current = e.target.value;
+          timeInterval.current = e.target.value > 500 ? 500 : e.target.value;
         }}
       />
       <div className="grid">
-        {cells.map((cell) => (
+        {cells.map((cell, i) => (
           <div
+            key={i}
             className={["cell", cell === CELL_TYPES.HEAD && "cell--head"]
               .filter(Boolean)
               .join(" ")}
