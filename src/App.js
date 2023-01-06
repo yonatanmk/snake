@@ -28,6 +28,7 @@ function App() {
         (GRID_SIZE * GRID_SIZE - 1) / 2 + 1
       )
   );
+  const [running, setRunning] = useState(false);
   const timeInterval = useRef(500);
   const direction = useRef(DIRECTIONS.RIGHT);
 
@@ -89,13 +90,20 @@ function App() {
       case "KeyD":
         direction.current = DIRECTIONS.RIGHT;
         break;
+      case "Space":
+        togglePlay();
+        break;
       default:
         break;
     }
   };
 
+  const togglePlay = () => setRunning((prev) => !prev);
+
   useEffect(() => {
-    const intervalId = setInterval(() => increment(), timeInterval.current);
+    const intervalId = setInterval(() => {
+      if (running) increment();
+    }, timeInterval.current);
     return () => clearInterval(intervalId);
   });
 
@@ -109,8 +117,6 @@ function App() {
   return (
     <div className="App">
       <h3>SNAKE</h3>
-      <p>Score: 0</p>
-      <label>Time Interval</label>
       <input
         type="number"
         value={timeInterval.current}
@@ -119,6 +125,9 @@ function App() {
           timeInterval.current = e.target.value > 500 ? 500 : e.target.value;
         }}
       />
+      <button onClick={togglePlay}>{running ? "STOP" : "START"}</button>
+      <p>Score: 0</p>
+      <label>Time Interval</label>
       <p>Direction: {direction.current}</p>
       <div className="grid">
         {cells.map((cell, i) => (
