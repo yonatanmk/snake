@@ -193,13 +193,8 @@ function App() {
 
   return (
     <div className="App">
-      <h3>SNAKE</h3>
-      <h3
-        className="gameover"
-        style={{ visibility: gameOver ? "visible" : "hidden" }}
-      >
-        GAME OVER
-      </h3>
+      {!gameOver && <h3>SNAKE</h3>}
+      {gameOver && <h3 className="gameover">GAME OVER</h3>}
       <input
         type="number"
         value={timeInterval.current}
