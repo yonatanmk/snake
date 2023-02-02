@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.scss";
+import { indexOfAll } from "./util";
 
 const GRID_SIZE = 17;
 const GRID_ROW_INDICES = [...Array(17).keys()];
@@ -31,6 +32,8 @@ function App() {
   const [running, setRunning] = useState(false);
   const timeInterval = useRef(500);
   const direction = useRef(DIRECTIONS.RIGHT);
+
+  const pointExists = cells.includes(CELL_TYPES.POINT);
 
   const increment = () => {
     const currentIndex = cells.findIndex((cell) => cell === CELL_TYPES.HEAD);
@@ -98,7 +101,39 @@ function App() {
     }
   };
 
-  const togglePlay = () => setRunning((prev) => !prev);
+  const togglePlay = () => {
+    if (!pointExists) {
+      createPoint();
+    }
+    setRunning((prev) => !prev);
+  };
+
+  const createPoint = () => {
+    if (pointExists) return;
+
+    const emptyIndices = indexOfAll(cells, CELL_TYPES.EMPTY);
+    const newPointIndex =
+      emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+
+    const newCells = cells.map((cell, i) =>
+      i === newPointIndex ? CELL_TYPES.POINT : cell
+    );
+
+    setCells(newCells);
+  };
+
+  const getCellClass = (cell) => {
+    switch (cell) {
+      case CELL_TYPES.HEAD:
+        return "cell cell--head";
+      case CELL_TYPES.TAIL:
+        return "cell cell--tail";
+      case CELL_TYPES.POINT:
+        return "cell cell--point";
+      default:
+        return "cell";
+    }
+  };
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -131,6 +166,11 @@ function App() {
       <p>Direction: {direction.current}</p>
       <div className="grid">
         {cells.map((cell, i) => (
+          <div key={i} className={getCellClass(cell)} />
+        ))}
+      </div>
+      {/* <div className="grid">
+        {cells.map((cell, i) => (
           <div
             key={i}
             className={["cell", cell === CELL_TYPES.HEAD && "cell--head"]
@@ -138,7 +178,7 @@ function App() {
               .join(" ")}
           />
         ))}
-      </div>
+      </div> */}
     </div>
   );
 }
