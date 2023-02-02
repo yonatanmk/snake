@@ -138,6 +138,22 @@ function App() {
   });
 
   useEffect(() => {
+    window.addEventListener(
+      "keydown",
+      (e) => {
+        if (
+          ["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].indexOf(
+            e.code
+          ) > -1
+        ) {
+          e.preventDefault();
+        }
+      },
+      false
+    );
+  });
+
+  useEffect(() => {
     const onGridKeyDown = (e) => {
       console.log(e);
       switch (e.code) {
@@ -196,8 +212,8 @@ function App() {
         {gameOver ? "New Game" : running ? "STOP" : "START"}
       </button>
       <p>Score: 0</p>
-      <label>Time Interval</label>
-      <p>Direction: {direction.current}</p>
+      {/* <label>Time Interval</label> */}
+      {/* <p>Direction: {direction.current}</p> */}
       <div className="grid">
         {cells.map((cell, i) => (
           <div key={i} className={getCellClass(cell)} />
