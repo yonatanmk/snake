@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import "./App.scss";
-import { indexOfAll } from "./util";
+import { indexOfAll, isMultipleOf } from "./util";
 
 const GRID_SIZE = 17;
-const GRID_ROW_INDICES = [...Array(17).keys()];
+// const GRID_ROW_INDICES = [...Array(17).keys()];
 
 const CELL_TYPES = Object.freeze({
   HEAD: "head",
@@ -19,96 +19,79 @@ const DIRECTIONS = Object.freeze({
   RIGHT: "right",
 });
 
-function App() {
-  const [cells, setCells] = useState(
-    Array(GRID_SIZE * GRID_SIZE)
-      .fill(CELL_TYPES.EMPTY)
-      .fill(
-        CELL_TYPES.HEAD,
-        (GRID_SIZE * GRID_SIZE - 1) / 2,
-        (GRID_SIZE * GRID_SIZE - 1) / 2 + 1
-      )
+const startState = Array(GRID_SIZE * GRID_SIZE)
+  .fill(CELL_TYPES.EMPTY)
+  .fill(
+    CELL_TYPES.HEAD,
+    (GRID_SIZE * GRID_SIZE - 1) / 2,
+    (GRID_SIZE * GRID_SIZE - 1) / 2 + 1
   );
+
+function App() {
+  const [cells, setCells] = useState(startState);
   const [running, setRunning] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
   const timeInterval = useRef(500);
   const direction = useRef(DIRECTIONS.RIGHT);
 
   const pointExists = cells.includes(CELL_TYPES.POINT);
+
+  const resetGame = useCallback(() => {
+    setGameOver(false);
+    setCells(startState);
+  }, []);
 
   const increment = () => {
     const currentIndex = cells.findIndex((cell) => cell === CELL_TYPES.HEAD);
     const newCells = [...cells];
     switch (direction.current) {
       case DIRECTIONS.UP:
-        if (GRID_ROW_INDICES.includes(currentIndex)) {
-          newCells[currentIndex + 17 * 16] = CELL_TYPES.HEAD;
+        if (currentIndex < 17) {
+          endGame();
         } else {
           newCells[currentIndex - 17] = CELL_TYPES.HEAD;
+          newCells[currentIndex] = CELL_TYPES.EMPTY;
+          setCells(newCells);
         }
         break;
       case DIRECTIONS.DOWN:
-        if (GRID_ROW_INDICES.map((x) => x + 17 * 16).includes(currentIndex)) {
-          newCells[currentIndex - 17 * 16] = CELL_TYPES.HEAD;
+        if (currentIndex >= 17 * 16) {
+          endGame();
         } else {
           newCells[currentIndex + 17] = CELL_TYPES.HEAD;
+          newCells[currentIndex] = CELL_TYPES.EMPTY;
+          setCells(newCells);
         }
         break;
       case DIRECTIONS.LEFT:
-        if (currentIndex === 0) {
-          newCells[GRID_SIZE * GRID_SIZE - 1] = CELL_TYPES.HEAD;
+        if (isMultipleOf(currentIndex, 17)) {
+          endGame();
         } else {
           newCells[currentIndex - 1] = CELL_TYPES.HEAD;
+          newCells[currentIndex] = CELL_TYPES.EMPTY;
+          setCells(newCells);
         }
         break;
       case DIRECTIONS.RIGHT:
-        if (currentIndex === GRID_SIZE * GRID_SIZE - 1) {
-          newCells[0] = CELL_TYPES.HEAD;
+        if (isMultipleOf(currentIndex + 1, 17)) {
+          endGame();
         } else {
           newCells[currentIndex + 1] = CELL_TYPES.HEAD;
+          newCells[currentIndex] = CELL_TYPES.EMPTY;
+          setCells(newCells);
         }
         break;
       default:
         break;
     }
-    newCells[currentIndex] = CELL_TYPES.EMPTY;
-    setCells(newCells);
   };
 
-  const onGridKeyDown = (e) => {
-    console.log(e);
-    switch (e.code) {
-      case "ArrowUp":
-      case "KeyW":
-        direction.current = DIRECTIONS.UP;
-        break;
-      case "ArrowDown":
-      case "KeyS":
-        direction.current = DIRECTIONS.DOWN;
-        break;
-      case "ArrowLeft":
-      case "KeyA":
-        direction.current = DIRECTIONS.LEFT;
-        break;
-      case "ArrowRight":
-      case "KeyD":
-        direction.current = DIRECTIONS.RIGHT;
-        break;
-      case "Space":
-        togglePlay();
-        break;
-      default:
-        break;
-    }
+  const endGame = () => {
+    setGameOver(true);
+    setRunning(false);
   };
 
-  const togglePlay = () => {
-    if (!pointExists) {
-      createPoint();
-    }
-    setRunning((prev) => !prev);
-  };
-
-  const createPoint = () => {
+  const createPoint = useCallback(() => {
     if (pointExists) return;
 
     const emptyIndices = indexOfAll(cells, CELL_TYPES.EMPTY);
@@ -120,7 +103,14 @@ function App() {
     );
 
     setCells(newCells);
-  };
+  }, [cells, pointExists]);
+
+  const togglePlay = useCallback(() => {
+    if (!pointExists) {
+      createPoint();
+    }
+    setRunning((prev) => !prev);
+  }, [pointExists, createPoint]);
 
   const getCellClass = (cell) => {
     switch (cell) {
@@ -135,6 +125,11 @@ function App() {
     }
   };
 
+  const onButtonClick = useCallback(() => {
+    if (gameOver) resetGame();
+    else togglePlay();
+  }, [gameOver, togglePlay, resetGame]);
+
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (running) increment();
@@ -143,15 +138,49 @@ function App() {
   });
 
   useEffect(() => {
+    // TODO CANT GO OPPOSITE DIRECTION
+    const onGridKeyDown = (e) => {
+      console.log(e);
+      switch (e.code) {
+        case "ArrowUp":
+        case "KeyW":
+          direction.current = DIRECTIONS.UP;
+          break;
+        case "ArrowDown":
+        case "KeyS":
+          direction.current = DIRECTIONS.DOWN;
+          break;
+        case "ArrowLeft":
+        case "KeyA":
+          direction.current = DIRECTIONS.LEFT;
+          break;
+        case "ArrowRight":
+        case "KeyD":
+          direction.current = DIRECTIONS.RIGHT;
+          break;
+        case "Space":
+          onButtonClick();
+          break;
+        default:
+          break;
+      }
+    };
+
     document.addEventListener("keydown", onGridKeyDown);
     return function cleanup() {
       document.removeEventListener("keydown", onGridKeyDown);
     };
-  }, []);
+  }, [onButtonClick]);
 
   return (
     <div className="App">
       <h3>SNAKE</h3>
+      <h3
+        className="gameover"
+        style={{ visibility: gameOver ? "visible" : "hidden" }}
+      >
+        GAME OVER
+      </h3>
       <input
         type="number"
         value={timeInterval.current}
@@ -160,7 +189,9 @@ function App() {
           timeInterval.current = e.target.value > 500 ? 500 : e.target.value;
         }}
       />
-      <button onClick={togglePlay}>{running ? "STOP" : "START"}</button>
+      <button onClick={onButtonClick}>
+        {gameOver ? "New Game" : running ? "STOP" : "START"}
+      </button>
       <p>Score: 0</p>
       <label>Time Interval</label>
       <p>Direction: {direction.current}</p>
