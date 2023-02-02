@@ -138,25 +138,28 @@ function App() {
   });
 
   useEffect(() => {
-    // TODO CANT GO OPPOSITE DIRECTION
     const onGridKeyDown = (e) => {
       console.log(e);
       switch (e.code) {
         case "ArrowUp":
         case "KeyW":
-          direction.current = DIRECTIONS.UP;
+          if (direction.current !== DIRECTIONS.DOWN)
+            direction.current = DIRECTIONS.UP;
           break;
         case "ArrowDown":
         case "KeyS":
-          direction.current = DIRECTIONS.DOWN;
+          if (direction.current !== DIRECTIONS.UP)
+            direction.current = DIRECTIONS.DOWN;
           break;
         case "ArrowLeft":
         case "KeyA":
-          direction.current = DIRECTIONS.LEFT;
+          if (direction.current !== DIRECTIONS.RIGHT)
+            direction.current = DIRECTIONS.LEFT;
           break;
         case "ArrowRight":
         case "KeyD":
-          direction.current = DIRECTIONS.RIGHT;
+          if (direction.current !== DIRECTIONS.LEFT)
+            direction.current = DIRECTIONS.RIGHT;
           break;
         case "Space":
           onButtonClick();
