@@ -34,6 +34,7 @@ function App() {
   const [score, setScore] = useState(0);
   const timeInterval = useRef(500);
   const direction = useRef(DIRECTIONS.RIGHT);
+  const [lastMove, setLastMove] = useState(DIRECTIONS.RIGHT);
 
   const pointExists = cells.includes(CELL_TYPES.POINT);
 
@@ -57,6 +58,7 @@ function App() {
         } else {
           incrementBoardUpdate(newCells, currentIndex, newIndex);
         }
+        if (lastMove !== DIRECTIONS.UP) setLastMove(DIRECTIONS.UP);
         break;
       case DIRECTIONS.DOWN:
         newIndex = currentIndex + 17;
@@ -67,6 +69,7 @@ function App() {
         } else {
           incrementBoardUpdate(newCells, currentIndex, newIndex);
         }
+        if (lastMove !== DIRECTIONS.DOWN) setLastMove(DIRECTIONS.DOWN);
         break;
       case DIRECTIONS.LEFT:
         newIndex = currentIndex - 1;
@@ -77,6 +80,7 @@ function App() {
         } else {
           incrementBoardUpdate(newCells, currentIndex, newIndex);
         }
+        if (lastMove !== DIRECTIONS.LEFT) setLastMove(DIRECTIONS.LEFT);
         break;
       case DIRECTIONS.RIGHT:
         newIndex = currentIndex + 1;
@@ -87,6 +91,7 @@ function App() {
         } else {
           incrementBoardUpdate(newCells, currentIndex, newIndex);
         }
+        if (lastMove !== DIRECTIONS.RIGHT) setLastMove(DIRECTIONS.RIGHT);
         break;
       default:
         break;
@@ -181,22 +186,20 @@ function App() {
       switch (e.code) {
         case "ArrowUp":
         case "KeyW":
-          if (direction.current !== DIRECTIONS.DOWN)
-            direction.current = DIRECTIONS.UP;
+          if (lastMove !== DIRECTIONS.DOWN) direction.current = DIRECTIONS.UP;
           break;
         case "ArrowDown":
         case "KeyS":
-          if (direction.current !== DIRECTIONS.UP)
-            direction.current = DIRECTIONS.DOWN;
+          if (lastMove !== DIRECTIONS.UP) direction.current = DIRECTIONS.DOWN;
           break;
         case "ArrowLeft":
         case "KeyA":
-          if (direction.current !== DIRECTIONS.RIGHT)
+          if (lastMove !== DIRECTIONS.RIGHT)
             direction.current = DIRECTIONS.LEFT;
           break;
         case "ArrowRight":
         case "KeyD":
-          if (direction.current !== DIRECTIONS.LEFT)
+          if (lastMove !== DIRECTIONS.LEFT)
             direction.current = DIRECTIONS.RIGHT;
           break;
         case "Space":
