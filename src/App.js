@@ -31,6 +31,7 @@ function App() {
   const [cells, setCells] = useState(startState);
   const [running, setRunning] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [score, setScore] = useState(0);
   const timeInterval = useRef(500);
   const direction = useRef(DIRECTIONS.RIGHT);
 
@@ -38,47 +39,53 @@ function App() {
 
   const resetGame = useCallback(() => {
     setGameOver(false);
+    setScore(0);
     setCells(startState);
   }, []);
 
   const increment = () => {
     const currentIndex = cells.findIndex((cell) => cell === CELL_TYPES.HEAD);
     const newCells = [...cells];
+    let newIndex;
     switch (direction.current) {
       case DIRECTIONS.UP:
+        newIndex = currentIndex - 17;
         if (currentIndex < 17) {
           endGame();
+        } else if (cells[newIndex] === CELL_TYPES.POINT) {
+          incrementBoardUpdate(newCells, currentIndex, newIndex, true);
         } else {
-          newCells[currentIndex - 17] = CELL_TYPES.HEAD;
-          newCells[currentIndex] = CELL_TYPES.EMPTY;
-          setCells(newCells);
+          incrementBoardUpdate(newCells, currentIndex, newIndex);
         }
         break;
       case DIRECTIONS.DOWN:
+        newIndex = currentIndex + 17;
         if (currentIndex >= 17 * 16) {
           endGame();
+        } else if (cells[newIndex] === CELL_TYPES.POINT) {
+          incrementBoardUpdate(newCells, currentIndex, newIndex, true);
         } else {
-          newCells[currentIndex + 17] = CELL_TYPES.HEAD;
-          newCells[currentIndex] = CELL_TYPES.EMPTY;
-          setCells(newCells);
+          incrementBoardUpdate(newCells, currentIndex, newIndex);
         }
         break;
       case DIRECTIONS.LEFT:
+        newIndex = currentIndex - 1;
         if (isMultipleOf(currentIndex, 17)) {
           endGame();
+        } else if (cells[newIndex] === CELL_TYPES.POINT) {
+          incrementBoardUpdate(newCells, currentIndex, newIndex, true);
         } else {
-          newCells[currentIndex - 1] = CELL_TYPES.HEAD;
-          newCells[currentIndex] = CELL_TYPES.EMPTY;
-          setCells(newCells);
+          incrementBoardUpdate(newCells, currentIndex, newIndex);
         }
         break;
       case DIRECTIONS.RIGHT:
+        newIndex = currentIndex + 1;
         if (isMultipleOf(currentIndex + 1, 17)) {
           endGame();
+        } else if (cells[newIndex] === CELL_TYPES.POINT) {
+          incrementBoardUpdate(newCells, currentIndex, newIndex, true);
         } else {
-          newCells[currentIndex + 1] = CELL_TYPES.HEAD;
-          newCells[currentIndex] = CELL_TYPES.EMPTY;
-          setCells(newCells);
+          incrementBoardUpdate(newCells, currentIndex, newIndex);
         }
         break;
       default:
@@ -86,31 +93,42 @@ function App() {
     }
   };
 
+  const incrementBoardUpdate = (
+    newCells,
+    currentIndex,
+    newIndex,
+    scorePoint = false
+  ) => {
+    if (scorePoint) setScore((prev) => prev + 1);
+    newCells[newIndex] = CELL_TYPES.HEAD;
+    newCells[currentIndex] = CELL_TYPES.EMPTY;
+    setCells(scorePoint ? addPointCell(newCells) : newCells);
+  };
+
   const endGame = () => {
     setGameOver(true);
     setRunning(false);
   };
 
-  const createPoint = useCallback(() => {
-    if (pointExists) return;
+  const addPointCell = useCallback((oldCells) => {
+    if (oldCells.includes(CELL_TYPES.POINT)) return oldCells;
 
-    const emptyIndices = indexOfAll(cells, CELL_TYPES.EMPTY);
+    const emptyIndices = indexOfAll(oldCells, CELL_TYPES.EMPTY);
     const newPointIndex =
       emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
 
-    const newCells = cells.map((cell, i) =>
+    const newCells = oldCells.map((cell, i) =>
       i === newPointIndex ? CELL_TYPES.POINT : cell
     );
-
-    setCells(newCells);
-  }, [cells, pointExists]);
+    return newCells;
+  }, []);
 
   const togglePlay = useCallback(() => {
     if (!pointExists) {
-      createPoint();
+      setCells(addPointCell(cells));
     }
     setRunning((prev) => !prev);
-  }, [pointExists, createPoint]);
+  }, [cells, pointExists, addPointCell]);
 
   const getCellClass = (cell) => {
     switch (cell) {
@@ -206,7 +224,7 @@ function App() {
       <button onClick={onButtonClick}>
         {gameOver ? "New Game" : running ? "STOP" : "START"}
       </button>
-      <p>Score: 0</p>
+      <p>Score: {score}</p>
       {/* <label>Time Interval</label> */}
       {/* <p>Direction: {direction.current}</p> */}
       <div className="grid">
