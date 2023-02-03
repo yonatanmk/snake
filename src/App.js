@@ -64,100 +64,29 @@ function App() {
       (cell) => cell === CELL_TYPES.HEAD
     );
     const newCells = [...cells];
+    const outOfBoundConditions = {
+      [DIRECTIONS.UP]: currentHeadIndex < 17,
+      [DIRECTIONS.DOWN]: currentHeadIndex >= 17 * 16,
+      [DIRECTIONS.LEFT]: isMultipleOf(currentHeadIndex, 17),
+      [DIRECTIONS.RIGHT]: isMultipleOf(currentHeadIndex + 1, 17),
+    };
     let newHeadIndex;
-    switch (direction.current) {
-      case DIRECTIONS.UP:
-        newHeadIndex = currentHeadIndex + INCREMENT_VALUES.UP;
-        if (currentHeadIndex < 17 || cells[newHeadIndex] === CELL_TYPES.TAIL) {
-          endGame();
-        } else if (cells[newHeadIndex] === CELL_TYPES.POINT) {
-          incrementBoardUpdate({
-            newCells,
-            currentHeadIndex,
-            newHeadIndex,
-            scorePoint: true,
-          });
-        } else {
-          incrementBoardUpdate({
-            newCells,
-            currentHeadIndex,
-            newHeadIndex,
-          });
-        }
-        if (lastMove !== DIRECTIONS.UP) setLastMove(DIRECTIONS.UP);
-        break;
-      case DIRECTIONS.DOWN:
-        newHeadIndex = currentHeadIndex + INCREMENT_VALUES.DOWN;
-        if (
-          currentHeadIndex >= 17 * 16 ||
-          cells[newHeadIndex] === CELL_TYPES.TAIL
-        ) {
-          endGame();
-        } else if (cells[newHeadIndex] === CELL_TYPES.POINT) {
-          incrementBoardUpdate({
-            newCells,
-            currentHeadIndex,
-            newHeadIndex,
-            scorePoint: true,
-          });
-        } else {
-          incrementBoardUpdate({
-            newCells,
-            currentHeadIndex,
-            newHeadIndex,
-          });
-        }
-        if (lastMove !== DIRECTIONS.DOWN) setLastMove(DIRECTIONS.DOWN);
-        break;
-      case DIRECTIONS.LEFT:
-        newHeadIndex = currentHeadIndex + INCREMENT_VALUES.LEFT;
-        if (
-          isMultipleOf(currentHeadIndex, 17) ||
-          cells[newHeadIndex] === CELL_TYPES.TAIL
-        ) {
-          endGame();
-        } else if (cells[newHeadIndex] === CELL_TYPES.POINT) {
-          incrementBoardUpdate({
-            newCells,
-            currentHeadIndex,
-            newHeadIndex,
-            scorePoint: true,
-          });
-        } else {
-          incrementBoardUpdate({
-            newCells,
-            currentHeadIndex,
-            newHeadIndex,
-          });
-        }
-        if (lastMove !== DIRECTIONS.LEFT) setLastMove(DIRECTIONS.LEFT);
-        break;
-      case DIRECTIONS.RIGHT:
-        newHeadIndex = currentHeadIndex + INCREMENT_VALUES.RIGHT;
-        if (
-          isMultipleOf(currentHeadIndex + 1, 17) ||
-          cells[newHeadIndex] === CELL_TYPES.TAIL
-        ) {
-          endGame();
-        } else if (cells[newHeadIndex] === CELL_TYPES.POINT) {
-          incrementBoardUpdate({
-            newCells,
-            currentHeadIndex,
-            newHeadIndex,
-            scorePoint: true,
-          });
-        } else {
-          incrementBoardUpdate({
-            newCells,
-            currentHeadIndex,
-            newHeadIndex,
-          });
-        }
-        if (lastMove !== DIRECTIONS.RIGHT) setLastMove(DIRECTIONS.RIGHT);
-        break;
-      default:
-        break;
+    newHeadIndex = currentHeadIndex + INCREMENT_VALUES[direction.current];
+    if (
+      outOfBoundConditions[direction.current] ||
+      cells[newHeadIndex] === CELL_TYPES.TAIL
+    ) {
+      debugger;
+      endGame();
+    } else {
+      incrementBoardUpdate({
+        newCells,
+        currentHeadIndex,
+        newHeadIndex,
+        scorePoint: cells[newHeadIndex] === CELL_TYPES.POINT,
+      });
     }
+    if (lastMove !== direction.current) setLastMove(direction.current);
   };
 
   const incrementBoardUpdate = ({
