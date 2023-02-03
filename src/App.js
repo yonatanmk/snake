@@ -124,8 +124,7 @@ function App() {
           ? CELL_TYPES.TAIL_END
           : CELL_TYPES.TAIL;
       newCells[currentTailEndIndex] = CELL_TYPES.EMPTY;
-      if (tailIndices.length > 0)
-        setTailIndices((prev) => incrementTailIndices(prev, currentHeadIndex));
+      setTailIndices((prev) => incrementTailIndices(prev, currentHeadIndex));
     } else if (tailIndices.length === 0) {
       newCells[currentHeadIndex] = CELL_TYPES.EMPTY;
     } else if (tailIndices.length === 1) {
