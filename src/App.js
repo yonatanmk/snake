@@ -193,6 +193,14 @@ function App() {
       newCells[currentHeadIndex] = CELL_TYPES.TAIL_END;
       setShouldGrow(false);
       setTailIndices([currentHeadIndex]);
+    } else if (scorePoint && shouldGrow) {
+      console.log("CASE ASDF");
+      setScore((prev) => prev + 1);
+      timeInterval.current -= 25; // TODO REFACTOR TO 10
+      newCells[currentHeadIndex] =
+        tailIndices.length + 1 === 1 ? CELL_TYPES.TAIL_END : CELL_TYPES.TAIL;
+      if (currentHeadIndex !== tailIndices[0])
+        setTailIndices((prev) => [currentHeadIndex, ...prev]);
     } else if (shouldGrow) {
       console.log("CASE 2");
       setShouldGrow(false);
