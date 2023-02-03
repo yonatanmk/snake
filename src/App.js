@@ -34,7 +34,7 @@ const startState = Array(GRID_SIZE * GRID_SIZE)
     (GRID_SIZE * GRID_SIZE - 1) / 2 + 1
   )
   .map((x, i) =>
-    [180, 176, 108, 109, 112].includes(i) ? CELL_TYPES.POINT : x
+    [180, 176, 108, 109, 112, 146, 147].includes(i) ? CELL_TYPES.POINT : x
   ); // TODO REMOVE
 
 function App() {
@@ -76,7 +76,6 @@ function App() {
       outOfBoundConditions[direction.current] ||
       cells[newHeadIndex] === CELL_TYPES.TAIL
     ) {
-      debugger;
       endGame();
     } else {
       incrementBoardUpdate({
@@ -96,7 +95,10 @@ function App() {
     scorePoint = false,
   }) => {
     const currentTailEndIndex = tailIndices[tailIndices.length - 1];
-    if (shouldGrow && !currentTailEndIndex) {
+    if (scorePoint && shouldGrow && !currentTailEndIndex) {
+      newCells[currentHeadIndex] = CELL_TYPES.TAIL_END;
+      setTailIndices([currentHeadIndex]);
+    } else if (shouldGrow && !currentTailEndIndex) {
       newCells[currentHeadIndex] = CELL_TYPES.TAIL_END;
       setShouldGrow(false);
       setTailIndices([currentHeadIndex]);
@@ -106,7 +108,7 @@ function App() {
       newCells[currentHeadIndex] =
         tailIndices.length + 1 === 1 ? CELL_TYPES.TAIL_END : CELL_TYPES.TAIL;
       if (currentHeadIndex !== tailIndices[0])
-        setTailIndices((prev) => [currentHeadIndex, ...prev]);
+        setTailIndices((prev) => incrementTailIndices(prev, currentHeadIndex));
     } else if (shouldGrow) {
       setShouldGrow(false);
       newCells[currentHeadIndex] =
