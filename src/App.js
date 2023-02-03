@@ -99,7 +99,10 @@ function App() {
     newIndex,
     scorePoint = false
   ) => {
-    if (scorePoint) setScore((prev) => prev + 1);
+    if (scorePoint) {
+      setScore((prev) => prev + 1);
+      timeInterval.current -= 25; // TODO REFACTOR TO 10
+    }
     newCells[newIndex] = CELL_TYPES.HEAD;
     newCells[currentIndex] = CELL_TYPES.EMPTY;
     setCells(scorePoint ? addPointCell(newCells) : newCells);
@@ -107,6 +110,7 @@ function App() {
 
   const endGame = () => {
     setGameOver(true);
+    direction.current = DIRECTIONS.RIGHT;
     setRunning(false);
   };
 
