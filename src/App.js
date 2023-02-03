@@ -34,7 +34,9 @@ const startState = Array(GRID_SIZE * GRID_SIZE)
     (GRID_SIZE * GRID_SIZE - 1) / 2,
     (GRID_SIZE * GRID_SIZE - 1) / 2 + 1
   )
-  .map((x, i) => ([180, 176, 108, 112].includes(i) ? CELL_TYPES.POINT : x)); // TODO REMOVE
+  .map((x, i) =>
+    [180, 176, 108, 109, 112].includes(i) ? CELL_TYPES.POINT : x
+  ); // TODO REMOVE
 
 function App() {
   const [cells, setCells] = useState(startState);
@@ -53,6 +55,9 @@ function App() {
     setGameOver(false);
     setScore(0);
     setCells(startState);
+    setTailIndices([]);
+    timeInterval.current = 500;
+    direction.current = DIRECTIONS.RIGHT;
   }, []);
 
   const increment = () => {
@@ -67,7 +72,7 @@ function App() {
     switch (direction.current) {
       case DIRECTIONS.UP:
         newHeadIndex = currentHeadIndex + INCREMENT_VALUES.UP;
-        if (currentHeadIndex < 17) {
+        if (currentHeadIndex < 17 || cells[newHeadIndex] === CELL_TYPES.TAIL) {
           endGame();
         } else if (cells[newHeadIndex] === CELL_TYPES.POINT) {
           incrementBoardUpdate({
@@ -89,7 +94,10 @@ function App() {
         break;
       case DIRECTIONS.DOWN:
         newHeadIndex = currentHeadIndex + INCREMENT_VALUES.DOWN;
-        if (currentHeadIndex >= 17 * 16) {
+        if (
+          currentHeadIndex >= 17 * 16 ||
+          cells[newHeadIndex] === CELL_TYPES.TAIL
+        ) {
           endGame();
         } else if (cells[newHeadIndex] === CELL_TYPES.POINT) {
           incrementBoardUpdate({
@@ -111,7 +119,10 @@ function App() {
         break;
       case DIRECTIONS.LEFT:
         newHeadIndex = currentHeadIndex + INCREMENT_VALUES.LEFT;
-        if (isMultipleOf(currentHeadIndex, 17)) {
+        if (
+          isMultipleOf(currentHeadIndex, 17) ||
+          cells[newHeadIndex] === CELL_TYPES.TAIL
+        ) {
           endGame();
         } else if (cells[newHeadIndex] === CELL_TYPES.POINT) {
           incrementBoardUpdate({
@@ -133,7 +144,10 @@ function App() {
         break;
       case DIRECTIONS.RIGHT:
         newHeadIndex = currentHeadIndex + INCREMENT_VALUES.RIGHT;
-        if (isMultipleOf(currentHeadIndex + 1, 17)) {
+        if (
+          isMultipleOf(currentHeadIndex + 1, 17) ||
+          cells[newHeadIndex] === CELL_TYPES.TAIL
+        ) {
           endGame();
         } else if (cells[newHeadIndex] === CELL_TYPES.POINT) {
           incrementBoardUpdate({
@@ -254,7 +268,6 @@ function App() {
 
   const endGame = () => {
     setGameOver(true);
-    direction.current = DIRECTIONS.RIGHT;
     setRunning(false);
   };
 
@@ -372,18 +385,18 @@ function App() {
         {gameOver ? "New Game" : running ? "STOP" : "START"}
       </button>
       <p>Score: {score}</p>
-      <p>TAILS: {tailIndices}</p>
+      {/* <p>TAILS: {tailIndices}</p> */}
       {/* <label>Time Interval</label> */}
       {/* <p>Direction: {direction.current}</p> */}
       <div className="grid">
-        {/* {cells.map((cell, i) => (
-          <div key={i} className={getCellClass(cell)} />
-        ))} */}
         {cells.map((cell, i) => (
+          <div key={i} className={getCellClass(cell)} />
+        ))}
+        {/* {cells.map((cell, i) => (
           <div key={i} className={getCellClass(cell)}>
             {i}
           </div>
-        ))}
+        ))} */}
       </div>
       {/* <div className="grid">
         {cells.map((cell, i) => (
