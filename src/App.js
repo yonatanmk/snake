@@ -101,7 +101,6 @@ function App() {
       setShouldGrow(false);
       setTailIndices([currentHeadIndex]);
     } else if (scorePoint && shouldGrow) {
-      console.log("CASE ASDF");
       setScore((prev) => prev + 1);
       timeInterval.current -= 25; // TODO REFACTOR TO 10
       newCells[currentHeadIndex] =
@@ -109,7 +108,6 @@ function App() {
       if (currentHeadIndex !== tailIndices[0])
         setTailIndices((prev) => [currentHeadIndex, ...prev]);
     } else if (shouldGrow) {
-      console.log("CASE 2");
       setShouldGrow(false);
       newCells[currentHeadIndex] =
         tailIndices.length + 1 === 1 ? CELL_TYPES.TAIL_END : CELL_TYPES.TAIL;
@@ -222,7 +220,6 @@ function App() {
 
   useEffect(() => {
     const onGridKeyDown = (e) => {
-      console.log(e);
       switch (e.code) {
         case "ArrowUp":
         case "KeyW":
