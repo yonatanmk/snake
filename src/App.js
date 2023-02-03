@@ -34,7 +34,7 @@ const startState = Array(GRID_SIZE * GRID_SIZE)
     (GRID_SIZE * GRID_SIZE - 1) / 2 + 1
   )
   .map((x, i) =>
-    [180, 176, 108, 109, 112, 146, 147].includes(i) ? CELL_TYPES.POINT : x
+    [180, 176, 108, 109, 112, 146].includes(i) ? CELL_TYPES.POINT : x
   ); // TODO REMOVE
 
 function App() {
@@ -96,26 +96,37 @@ function App() {
   }) => {
     const currentTailEndIndex = tailIndices[tailIndices.length - 1];
     if (scorePoint && shouldGrow && !currentTailEndIndex) {
+      // console.log(1);
       newCells[currentHeadIndex] = CELL_TYPES.TAIL_END;
       setTailIndices([currentHeadIndex]);
     } else if (shouldGrow && !currentTailEndIndex) {
+      // console.log(2);
       newCells[currentHeadIndex] = CELL_TYPES.TAIL_END;
       setShouldGrow(false);
       setTailIndices([currentHeadIndex]);
     } else if (scorePoint && shouldGrow) {
+      // console.log(3);
       setScore((prev) => prev + 1);
       timeInterval.current -= 25; // TODO REFACTOR TO 10
       newCells[currentHeadIndex] =
         tailIndices.length + 1 === 1 ? CELL_TYPES.TAIL_END : CELL_TYPES.TAIL;
       if (currentHeadIndex !== tailIndices[0])
-        setTailIndices((prev) => incrementTailIndices(prev, currentHeadIndex));
+        setTailIndices((prev) =>
+          incrementTailIndices({
+            oldTailIndices: prev,
+            currentHeadIndex,
+            keepTail: true,
+          })
+        );
     } else if (shouldGrow) {
+      // console.log(4);
       setShouldGrow(false);
       newCells[currentHeadIndex] =
         tailIndices.length + 1 === 1 ? CELL_TYPES.TAIL_END : CELL_TYPES.TAIL;
       if (currentHeadIndex !== tailIndices[0])
         setTailIndices((prev) => [currentHeadIndex, ...prev]);
     } else if (scorePoint) {
+      // console.log(5);
       setShouldGrow(true);
       setScore((prev) => prev + 1);
       timeInterval.current -= 25; // TODO REFACTOR TO 10
@@ -126,29 +137,49 @@ function App() {
           ? CELL_TYPES.TAIL_END
           : CELL_TYPES.TAIL;
       newCells[currentTailEndIndex] = CELL_TYPES.EMPTY;
-      setTailIndices((prev) => incrementTailIndices(prev, currentHeadIndex));
+      if (tailIndices.length > 0) {
+        const newTailEndIndex = tailIndices[tailIndices.length - 2];
+        newCells[newTailEndIndex] = CELL_TYPES.TAIL_END;
+        setTailIndices((prev) =>
+          incrementTailIndices({ oldTailIndices: prev, currentHeadIndex })
+        );
+      }
     } else if (tailIndices.length === 0) {
+      // console.log(6);
       newCells[currentHeadIndex] = CELL_TYPES.EMPTY;
     } else if (tailIndices.length === 1) {
+      // console.log(7);
+
       newCells[currentHeadIndex] = CELL_TYPES.TAIL_END;
       newCells[currentTailEndIndex] = CELL_TYPES.EMPTY;
-      setTailIndices((prev) => incrementTailIndices(prev, currentHeadIndex));
+      setTailIndices((prev) =>
+        incrementTailIndices({ oldTailIndices: prev, currentHeadIndex })
+      );
     } else {
+      // console.log(8);
       newCells[currentHeadIndex] = CELL_TYPES.TAIL;
       const newTailEndIndex = tailIndices[tailIndices.length - 2];
       newCells[newTailEndIndex] = CELL_TYPES.TAIL_END;
       newCells[currentTailEndIndex] = CELL_TYPES.EMPTY;
-      setTailIndices((prev) => incrementTailIndices(prev, currentHeadIndex));
+      setTailIndices((prev) =>
+        incrementTailIndices({ oldTailIndices: prev, currentHeadIndex })
+      );
     }
 
     newCells[newHeadIndex] = CELL_TYPES.HEAD;
     setCells(scorePoint ? addPointCell(newCells) : newCells);
   };
 
-  const incrementTailIndices = (oldTailIndices, currentHeadIndex) => {
+  const incrementTailIndices = ({
+    oldTailIndices,
+    currentHeadIndex,
+    keepTail = false,
+  }) => {
     return [
       currentHeadIndex,
-      ...oldTailIndices.slice(0, oldTailIndices.length - 1),
+      ...(keepTail
+        ? oldTailIndices
+        : oldTailIndices.slice(0, oldTailIndices.length - 1)),
     ];
   };
 
@@ -182,8 +213,9 @@ function App() {
       case CELL_TYPES.HEAD:
         return "cell cell--head";
       case CELL_TYPES.TAIL:
-      case CELL_TYPES.TAIL_END:
         return "cell cell--tail";
+      case CELL_TYPES.TAIL_END:
+        return "cell cell--tail-end";
       case CELL_TYPES.POINT:
         return "cell cell--point";
       default:
@@ -269,19 +301,23 @@ function App() {
       <button onClick={onButtonClick}>
         {gameOver ? "New Game" : running ? "STOP" : "START"}
       </button>
-      <p>Score: {score}</p>
-      {/* <p>TAILS: {tailIndices}</p> */}
+      {/* <p>Score: {score}</p> */}
+      <p>
+        <span>Score: {score}</span> |{" "}
+        <span>TAILS: {tailIndices.map((x) => `${x}`).join(" ")}</span>
+      </p>
+      {/* <p>TAILS: {tailIndices.join[" "]}</p> */}
       {/* <label>Time Interval</label> */}
       {/* <p>Direction: {direction.current}</p> */}
       <div className="grid">
-        {cells.map((cell, i) => (
-          <div key={i} className={getCellClass(cell)} />
-        ))}
         {/* {cells.map((cell, i) => (
+          <div key={i} className={getCellClass(cell)} />
+        ))} */}
+        {cells.map((cell, i) => (
           <div key={i} className={getCellClass(cell)}>
             {i}
           </div>
-        ))} */}
+        ))}
       </div>
     </div>
   );
