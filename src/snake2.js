@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { indexOfAll, isMultipleOf } from "./util";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { indexOfAll, isMultipleOf, range } from "./util";
 
-const GRID_SIZE = 17;
+// const GRID_SIZE = 17;
+const GRID_SIZE = 9;
 
 const CELL_TYPES = Object.freeze({
   HEAD: "HEAD",
@@ -19,8 +20,8 @@ const DIRECTIONS = Object.freeze({
 });
 
 const INCREMENT_VALUES = Object.freeze({
-  UP: -17,
-  DOWN: 17,
+  UP: -GRID_SIZE,
+  DOWN: GRID_SIZE,
   LEFT: -1,
   RIGHT: 1,
 });
@@ -37,7 +38,7 @@ const startState = Array(GRID_SIZE * GRID_SIZE)
   ); // TODO REMOVE
 
 function Snake2() {
-  const [cells, setCells] = useState(startState);
+  // const [cells, setCells] = useState(startState);
   const [running, setRunning] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
@@ -47,138 +48,103 @@ function Snake2() {
   const [shouldGrow, setShouldGrow] = useState(false);
   const [tailIndices, setTailIndices] = useState([]);
 
-  const pointExists = cells.includes(CELL_TYPES.POINT);
+  // -----------------------
+  const [headIndex, setHeadIndex] = useState((GRID_SIZE * GRID_SIZE - 1) / 2);
+  const [pointIndex, setPointIndex] = useState(null);
+
+  // const pointExists = cells.includes(CELL_TYPES.POINT);
+
+  const grid = useMemo(
+    () =>
+      Array(GRID_SIZE * GRID_SIZE)
+        .fill(null)
+        .map((_, i) => i),
+    []
+  );
 
   const resetGame = useCallback(() => {
     setGameOver(false);
     setScore(0);
-    setCells(startState);
+    // setCells(startState);
     setTailIndices([]);
     timeInterval.current = 500;
     direction.current = DIRECTIONS.RIGHT;
   }, []);
 
   const increment = () => {
-    const currentHeadIndex = cells.findIndex(
-      (cell) => cell === CELL_TYPES.HEAD
-    );
-    const newCells = [...cells];
     const outOfBoundConditions = {
-      [DIRECTIONS.UP]: currentHeadIndex < 17,
-      [DIRECTIONS.DOWN]: currentHeadIndex >= 17 * 16,
-      [DIRECTIONS.LEFT]: isMultipleOf(currentHeadIndex, 17),
-      [DIRECTIONS.RIGHT]: isMultipleOf(currentHeadIndex + 1, 17),
+      [DIRECTIONS.UP]: headIndex < GRID_SIZE,
+      [DIRECTIONS.DOWN]: headIndex >= GRID_SIZE * (GRID_SIZE - 1),
+      [DIRECTIONS.LEFT]: isMultipleOf(headIndex, GRID_SIZE),
+      [DIRECTIONS.RIGHT]: isMultipleOf(headIndex + 1, GRID_SIZE),
     };
     let newHeadIndex;
-    newHeadIndex = currentHeadIndex + INCREMENT_VALUES[direction.current];
+    newHeadIndex = headIndex + INCREMENT_VALUES[direction.current];
     if (
       outOfBoundConditions[direction.current] ||
-      cells[newHeadIndex] === CELL_TYPES.TAIL
+      tailIndices.slice(0, tailIndices.length - 1).includes(newHeadIndex)
     ) {
       endGame();
     } else {
       incrementBoardUpdate({
-        newCells,
-        currentHeadIndex,
+        // newCells,
+        // currentHeadIndex,
         newHeadIndex,
-        scorePoint: cells[newHeadIndex] === CELL_TYPES.POINT,
+        scorePoint: newHeadIndex === pointIndex,
       });
     }
     if (lastMove !== direction.current) setLastMove(direction.current);
   };
 
   const incrementBoardUpdate = ({
-    newCells,
-    currentHeadIndex,
+    // newCells,
+    // currentHeadIndex,
     newHeadIndex,
     scorePoint = false,
   }) => {
-    const currentTailEndIndex = tailIndices[tailIndices.length - 1];
-    if (scorePoint && shouldGrow && !currentTailEndIndex) {
-      // console.log(1);
-      newCells[currentHeadIndex] = CELL_TYPES.TAIL_END;
-      setTailIndices([currentHeadIndex]);
-    } else if (shouldGrow && !currentTailEndIndex) {
-      // console.log(2);
-      newCells[currentHeadIndex] = CELL_TYPES.TAIL_END;
+    if (shouldGrow) {
+      console.log(1);
       setShouldGrow(false);
-      setTailIndices([currentHeadIndex]);
-    } else if (scorePoint && shouldGrow) {
-      // console.log(3);
-      setScore((prev) => prev + 1);
-      timeInterval.current -= 25; // TODO REFACTOR TO 10
-      newCells[currentHeadIndex] =
-        tailIndices.length + 1 === 1 ? CELL_TYPES.TAIL_END : CELL_TYPES.TAIL;
-      if (currentHeadIndex !== tailIndices[0])
-        setTailIndices((prev) =>
-          incrementTailIndices({
-            oldTailIndices: prev,
-            currentHeadIndex,
-            keepTail: true,
-          })
-        );
-    } else if (shouldGrow) {
-      // console.log(4);
-      setShouldGrow(false);
-      newCells[currentHeadIndex] =
-        tailIndices.length + 1 === 1 ? CELL_TYPES.TAIL_END : CELL_TYPES.TAIL;
-      if (currentHeadIndex !== tailIndices[0])
-        setTailIndices((prev) => [currentHeadIndex, ...prev]);
+      setTailIndices((prev) => [headIndex, ...prev]);
     } else if (scorePoint) {
-      // console.log(5);
+      console.log(2);
       setShouldGrow(true);
+      setPointIndex(null);
       setScore((prev) => prev + 1);
-      timeInterval.current -= 25; // TODO REFACTOR TO 10
-      newCells[currentHeadIndex] =
-        tailIndices.length === 0
-          ? CELL_TYPES.EMPTY
-          : tailIndices.length === 1
-          ? CELL_TYPES.TAIL_END
-          : CELL_TYPES.TAIL;
-      newCells[currentTailEndIndex] = CELL_TYPES.EMPTY;
-      if (tailIndices.length > 0) {
-        const newTailEndIndex = tailIndices[tailIndices.length - 2];
-        newCells[newTailEndIndex] = CELL_TYPES.TAIL_END;
-        setTailIndices((prev) =>
-          incrementTailIndices({ oldTailIndices: prev, currentHeadIndex })
-        );
-      }
-    } else if (tailIndices.length === 0) {
-      // console.log(6);
-      newCells[currentHeadIndex] = CELL_TYPES.EMPTY;
-    } else if (tailIndices.length === 1) {
-      // console.log(7);
-
-      newCells[currentHeadIndex] = CELL_TYPES.TAIL_END;
-      newCells[currentTailEndIndex] = CELL_TYPES.EMPTY;
-      setTailIndices((prev) =>
-        incrementTailIndices({ oldTailIndices: prev, currentHeadIndex })
-      );
+      timeInterval.current -= 10;
+      if (tailIndices.length > 0)
+        setTailIndices((prev) => incrementTailIndices(prev));
     } else {
-      // console.log(8);
-      newCells[currentHeadIndex] = CELL_TYPES.TAIL;
-      const newTailEndIndex = tailIndices[tailIndices.length - 2];
-      newCells[newTailEndIndex] = CELL_TYPES.TAIL_END;
-      newCells[currentTailEndIndex] = CELL_TYPES.EMPTY;
-      setTailIndices((prev) =>
-        incrementTailIndices({ oldTailIndices: prev, currentHeadIndex })
-      );
+      console.log(3);
+      // setHeadIndex(newHeadIndex);
+      if (tailIndices.length > 0)
+        setTailIndices((prev) => incrementTailIndices(prev));
     }
-
-    newCells[newHeadIndex] = CELL_TYPES.HEAD;
-    setCells(scorePoint ? addPointCell(newCells) : newCells);
+    setHeadIndex(newHeadIndex);
+    console.log("incrementBoardUpdate ");
+    console.log({
+      scorePoint,
+      shouldGrow,
+      headIndex,
+      newHeadIndex,
+      tailIndices,
+      pointIndex,
+    });
+    if (scorePoint) createPointIndex();
   };
 
-  const incrementTailIndices = ({
-    oldTailIndices,
-    currentHeadIndex,
-    keepTail = false,
-  }) => {
+  const incrementTailIndices = (currentTailIndices) => {
+    console.log("incrementTailIndices");
+    console.log({
+      old: currentTailIndices,
+      new: [
+        headIndex,
+        ...currentTailIndices.slice(0, currentTailIndices.length - 1),
+      ],
+    });
     return [
-      currentHeadIndex,
-      ...(keepTail
-        ? oldTailIndices
-        : oldTailIndices.slice(0, oldTailIndices.length - 1)),
+      headIndex,
+      ...currentTailIndices.slice(0, currentTailIndices.length - 1),
     ];
   };
 
@@ -187,39 +153,36 @@ function Snake2() {
     setRunning(false);
   };
 
-  const addPointCell = useCallback((oldCells) => {
-    if (oldCells.includes(CELL_TYPES.POINT)) return oldCells;
-
-    const emptyIndices = indexOfAll(oldCells, CELL_TYPES.EMPTY);
-    const newPointIndex =
-      emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-
-    const newCells = oldCells.map((cell, i) =>
-      i === newPointIndex ? CELL_TYPES.POINT : cell
+  const createPointIndex = useCallback(() => {
+    // if (pointIndex) return;
+    const emptyIndices = grid.filter(
+      (i) => ![...tailIndices, headIndex].includes(i)
     );
-    return newCells;
-  }, []);
+    setPointIndex(
+      emptyIndices[Math.floor(Math.random() * emptyIndices.length)]
+    );
+  }, [grid, pointIndex, headIndex, tailIndices]);
 
   const togglePlay = useCallback(() => {
-    if (!pointExists) {
-      setCells(addPointCell(cells));
+    if (pointIndex === null) {
+      createPointIndex();
     }
     setRunning((prev) => !prev);
-  }, [cells, pointExists, addPointCell]);
+  }, [pointIndex, createPointIndex]);
 
-  const getCellClass = (cell) => {
-    switch (cell) {
-      case CELL_TYPES.HEAD:
-        return "cell cell--head";
-      case CELL_TYPES.TAIL:
-        return "cell cell--tail";
-      case CELL_TYPES.TAIL_END:
-        return "cell cell--tail-end";
-      case CELL_TYPES.POINT:
-        return "cell cell--point";
-      default:
-        return "cell";
+  const getCellClass = (index) => {
+    let className = "cell";
+    if (tailIndices.length && index === tailIndices[tailIndices.length - 1]) {
+      className += " cell--tail-end";
+    } else if (tailIndices.includes(index)) {
+      className += " cell--tail";
+    } else if (index === headIndex) {
+      className += " cell--head";
+    } else if (index === pointIndex) {
+      className += " cell--point";
     }
+
+    return className;
   };
 
   const onButtonClick = useCallback(() => {
@@ -302,18 +265,19 @@ function Snake2() {
       </button>
       {/* <p>Score: {score}</p> */}
       <p>
-        <span>Score: {score}</span> |{" "}
+        <span>Score: {score}</span> | <span>Point: {pointIndex}</span> |{" "}
         <span>TAILS: {tailIndices.map((x) => `${x}`).join(" ")}</span>
       </p>
       {/* <p>TAILS: {tailIndices.join[" "]}</p> */}
       {/* <label>Time Interval</label> */}
       {/* <p>Direction: {direction.current}</p> */}
+
       <div className="grid">
         {/* {cells.map((cell, i) => (
           <div key={i} className={getCellClass(cell)} />
         ))} */}
-        {cells.map((cell, i) => (
-          <div key={i} className={getCellClass(cell)}>
+        {grid.map((i) => (
+          <div key={i} className={getCellClass(i)}>
             {i}
           </div>
         ))}

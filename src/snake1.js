@@ -19,8 +19,8 @@ const DIRECTIONS = Object.freeze({
 });
 
 const INCREMENT_VALUES = Object.freeze({
-  UP: -17,
-  DOWN: 17,
+  UP: -GRID_SIZE,
+  DOWN: GRID_SIZE,
   LEFT: -1,
   RIGHT: 1,
 });
@@ -64,10 +64,10 @@ function Snake1() {
     );
     const newCells = [...cells];
     const outOfBoundConditions = {
-      [DIRECTIONS.UP]: currentHeadIndex < 17,
-      [DIRECTIONS.DOWN]: currentHeadIndex >= 17 * 16,
-      [DIRECTIONS.LEFT]: isMultipleOf(currentHeadIndex, 17),
-      [DIRECTIONS.RIGHT]: isMultipleOf(currentHeadIndex + 1, 17),
+      [DIRECTIONS.UP]: currentHeadIndex < GRID_SIZE,
+      [DIRECTIONS.DOWN]: currentHeadIndex >= GRID_SIZE * (GRID_SIZE - 1),
+      [DIRECTIONS.LEFT]: isMultipleOf(currentHeadIndex, GRID_SIZE),
+      [DIRECTIONS.RIGHT]: isMultipleOf(currentHeadIndex + 1, GRID_SIZE),
     };
     let newHeadIndex;
     newHeadIndex = currentHeadIndex + INCREMENT_VALUES[direction.current];
