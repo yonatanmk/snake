@@ -4,9 +4,8 @@
   .grid {
     display: grid;
     border: 1px solid black;
-    // gap: 1px;
-    // grid-template-columns: repeat(17, 1fr);
-    grid-template-columns: repeat(9, 1fr);
+    grid-template-columns: repeat(17, 1fr);
+    // grid-template-columns: repeat(9, 1fr);
     width: 40%;
     margin: auto;
 
@@ -23,7 +22,8 @@
       }
 
       &--tail-end {
-        background-color: cyan;
+        // background-color: cyan;
+        background-color: #ffbf00;
       }
 
       &--point {

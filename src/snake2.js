@@ -1,16 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { indexOfAll, isMultipleOf, range } from "./util";
+import { isMultipleOf } from "./util";
 
-// const GRID_SIZE = 17;
-const GRID_SIZE = 9;
-
-const CELL_TYPES = Object.freeze({
-  HEAD: "HEAD",
-  TAIL: "TAIL",
-  TAIL_END: "TAIL_END",
-  EMPTY: "EMPTY",
-  POINT: "POINT",
-});
+const GRID_SIZE = 17;
+// const GRID_SIZE = 9;
 
 const DIRECTIONS = Object.freeze({
   UP: "UP",
@@ -26,33 +18,17 @@ const INCREMENT_VALUES = Object.freeze({
   RIGHT: 1,
 });
 
-const startState = Array(GRID_SIZE * GRID_SIZE)
-  .fill(CELL_TYPES.EMPTY)
-  .fill(
-    CELL_TYPES.HEAD,
-    (GRID_SIZE * GRID_SIZE - 1) / 2,
-    (GRID_SIZE * GRID_SIZE - 1) / 2 + 1
-  )
-  .map((x, i) =>
-    [180, 176, 108, 109, 112, 146].includes(i) ? CELL_TYPES.POINT : x
-  ); // TODO REMOVE
-
 function Snake2() {
   const [running, setRunning] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
-  const timeInterval = useRef(500);
-  const direction = useRef(DIRECTIONS.RIGHT);
   const [lastMove, setLastMove] = useState(DIRECTIONS.RIGHT);
   const [shouldGrow, setShouldGrow] = useState(false);
   const [tailIndices, setTailIndices] = useState([]);
-
-  // -----------------------
   const [headIndex, setHeadIndex] = useState((GRID_SIZE * GRID_SIZE - 1) / 2);
   const [pointIndex, setPointIndex] = useState(null);
-  // const [pointIndices, setPointIndices] = useState([42, 43, 24, 20, 38, 56]);
-
-  // const pointExists = cells.includes(CELL_TYPES.POINT);
+  const timeInterval = useRef(500);
+  const direction = useRef(DIRECTIONS.RIGHT);
 
   const grid = useMemo(
     () =>
@@ -65,7 +41,6 @@ function Snake2() {
   const resetGame = useCallback(() => {
     setGameOver(false);
     setScore(0);
-    // setCells(startState);
     setTailIndices([]);
     timeInterval.current = 500;
     direction.current = DIRECTIONS.RIGHT;
@@ -87,41 +62,27 @@ function Snake2() {
       endGame();
     } else {
       incrementBoardUpdate({
-        // newCells,
-        // currentHeadIndex,
         newHeadIndex,
         scorePoint: newHeadIndex === pointIndex,
-        // scorePoint: pointIndices.includes(newHeadIndex),
       });
     }
     if (lastMove !== direction.current) setLastMove(direction.current);
   };
 
-  const incrementBoardUpdate = ({
-    // newCells,
-    // currentHeadIndex,
-    newHeadIndex,
-    scorePoint = false,
-  }) => {
+  const incrementBoardUpdate = ({ newHeadIndex, scorePoint = false }) => {
     if (scorePoint && shouldGrow) {
-      console.log(0);
       setScore((prev) => prev + 1);
       timeInterval.current -= 10;
       setTailIndices((currentTailIndices) =>
         incrementTailIndices({ currentTailIndices, keepTailEnd: true })
       );
-      // setPointIndices((prev) => prev.filter((x) => x !== newHeadIndex));
       setPointIndex(null);
-      // } else if (scorePoint && shouldGrow) {
     } else if (shouldGrow) {
-      console.log(1);
       setShouldGrow(false);
       setTailIndices((prev) => [headIndex, ...prev]);
     } else if (scorePoint) {
-      console.log(2);
       setShouldGrow(true);
       setPointIndex(null);
-      // setPointIndices((prev) => prev.filter((x) => x !== newHeadIndex));
       setScore((prev) => prev + 1);
       timeInterval.current -= 10;
       if (tailIndices.length > 0)
@@ -129,45 +90,21 @@ function Snake2() {
           incrementTailIndices({ currentTailIndices })
         );
     } else {
-      console.log(3);
-      // setHeadIndex(newHeadIndex);
       if (tailIndices.length > 0)
         setTailIndices((currentTailIndices) =>
           incrementTailIndices({ currentTailIndices })
         );
     }
     setHeadIndex(newHeadIndex);
-    console.log("incrementBoardUpdate ");
-    console.log({
-      scorePoint,
-      shouldGrow,
-      headIndex,
-      newHeadIndex,
-      tailIndices,
-      pointIndex,
-      // pointIndices,
-    });
     if (scorePoint) createPointIndex();
   };
 
-  const incrementTailIndices = ({ currentTailIndices, keepTailEnd }) => {
-    console.log("incrementTailIndices");
-    console.log({
-      old: currentTailIndices,
-      new: [
-        headIndex,
-        ...(keepTailEnd
-          ? currentTailIndices
-          : currentTailIndices.slice(0, currentTailIndices.length - 1)),
-      ],
-    });
-    return [
-      headIndex,
-      ...(keepTailEnd
-        ? currentTailIndices
-        : currentTailIndices.slice(0, currentTailIndices.length - 1)),
-    ];
-  };
+  const incrementTailIndices = ({ currentTailIndices, keepTailEnd }) => [
+    headIndex,
+    ...(keepTailEnd
+      ? currentTailIndices
+      : currentTailIndices.slice(0, currentTailIndices.length - 1)),
+  ];
 
   const endGame = () => {
     setGameOver(true);
@@ -175,7 +112,6 @@ function Snake2() {
   };
 
   const createPointIndex = useCallback(() => {
-    // if (pointIndex) return;
     const emptyIndices = grid.filter(
       (i) => ![...tailIndices, headIndex].includes(i)
     );
@@ -186,7 +122,6 @@ function Snake2() {
 
   const togglePlay = useCallback(() => {
     if (pointIndex === null) {
-      // if (pointIndices.length === 0) {
       createPointIndex();
     }
     setRunning((prev) => !prev);
@@ -264,7 +199,6 @@ function Snake2() {
     } else if (index === headIndex) {
       className += " cell--head";
     } else if (index === pointIndex) {
-      // } else if (pointIndices.includes(index)) {
       className += " cell--point";
     }
 
@@ -286,25 +220,20 @@ function Snake2() {
       <button onClick={onButtonClick}>
         {gameOver ? "New Game" : running ? "STOP" : "START"}
       </button>
-      {/* <p>Score: {score}</p> */}
-      <p>
-        {/* <span>Score: {score}</span> | <span>Point: {pointIndex}</span> |{" "} */}
+      <p>Score: {score}</p>
+      {/* <p>
         <span>Score: {score}</span> |{" "}
         <span>TAILS: {tailIndices.map((x) => `${x}`).join(" ")}</span>
-      </p>
-      {/* <p>TAILS: {tailIndices.join[" "]}</p> */}
-      {/* <label>Time Interval</label> */}
-      {/* <p>Direction: {direction.current}</p> */}
-
+      </p> */}
       <div className="grid">
-        {/* {cells.map((cell, i) => (
-          <div key={i} className={getCellClass(cell)} />
-        ))} */}
         {grid.map((i) => (
+          <div key={i} className={getCellClass(i)} />
+        ))}
+        {/* {grid.map((i) => (
           <div key={i} className={getCellClass(i)}>
             {i}
           </div>
-        ))}
+        ))} */}
       </div>
     </div>
   );
